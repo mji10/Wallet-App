@@ -9,18 +9,6 @@ const account1 = {
   movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
   interestRate: 1.2, // %
   pin: 1111,
-  movementsDates: [
-    '2019-11-18T21:31:17.178Z',
-    '2019-12-23T07:42:02.383Z',
-    '2020-01-28T09:15:04.904Z',
-    '2020-04-01T10:17:24.185Z',
-    '2020-05-08T14:11:59.604Z',
-    '2020-07-26T17:01:17.194Z',
-    '2020-07-28T23:36:17.929Z',
-    '2020-08-01T10:51:36.790Z',
-  ],
-  currency: 'INR',
-  locale: 'en-IN', // de-DE
 };
 
 const account2 = {
@@ -28,37 +16,13 @@ const account2 = {
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
-  movementsDates: [
-    '2019-11-01T13:15:33.035Z',
-    '2019-11-30T09:48:16.867Z',
-    '2019-12-25T06:04:23.907Z',
-    '2020-01-25T14:18:46.235Z',
-    '2020-02-05T16:33:06.386Z',
-    '2020-04-10T14:43:26.374Z',
-    '2020-06-25T18:49:59.371Z',
-    '2020-07-26T12:01:20.894Z',
-  ],
-  currency: 'USD',
-  locale: 'en-US',
 };
 
 const account3 = {
   owner: 'Mohammed Juzer', //mj
-  movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
+  movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30], // used to calculate balance
   interestRate: 1.5,
-  pin: 2222,
-  movementsDates: [
-    '2019-11-01T13:15:33.035Z',
-    '2019-11-30T09:48:16.867Z',
-    '2019-12-25T06:04:23.907Z',
-    '2020-01-25T14:18:46.235Z',
-    '2020-02-05T16:33:06.386Z',
-    '2020-04-10T14:43:26.374Z',
-    '2020-06-25T18:49:59.371Z',
-    '2020-07-26T12:01:20.894Z',
-  ],
-  currency: 'USD',
-  locale: 'en-US',
+  pin: 3333,
 };
 
 const accounts = [account1, account2, account3];
@@ -119,6 +83,44 @@ const createUsername = function (accs) {
 
 createUsername(accounts);
 
+// Create a balance display
+const calcBalanceDisplay = function (acc) {
+  acc.balance = acc.movements.reduce((red, mov) => red + mov, 0);
+  labelBalance.textContent = `${acc.balance}`;
+};
+
+// Display deposits and withdrawals
+const displayMovements = function (movements) {
+  containerMovements.innerHTML = '';
+
+  movements.forEach((mov, i) => {
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
+    const html = `<div class="movements__row">
+    <div class="movements__type movements__type--${type}">
+      ${i + 1} ${type}
+    </div>
+    <div class="movements__value">${mov}</div>
+  </div>`;
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+  });
+};
+
+// Calculating Money In and Money Out
+// Money In
+
+const displaySummary = function (acc) {
+  const moneyIn = acc.movements
+    .filter(mov => mov > 0) //This will see all number in +ve and return a new array with +ve numbers
+    .reduce((acc, mov) => acc + mov, 0); //This will add all the +ve numbers
+  labelSumIn.textContent = moneyIn;
+
+  // Money Out
+  const moneyOut = acc.movements
+    .filter(mov => mov < 0) //This will see all number in -ve and return a new array with +ve numbers
+    .reduce((acc, mov) => acc + mov, 0); //This will add all the -ve numbers
+  labelSumOut.textContent = `${Math.abs(moneyOut)}`;
+};
+
 // Add form btn a event listener for log in
 
 let currentAccount;
@@ -138,8 +140,23 @@ btnLogin.addEventListener('click', function (e) {
       currentAccount.owner.split(' ')[0]
     }`;
 
+    displayMovements(currentAccount.movements);
+    calcBalanceDisplay(currentAccount);
+    displaySummary(currentAccount);
     containerApp.style.opacity = '100';
   } else {
     console.log('Login Failure');
   }
+});
+
+// Request Loan Amt Btn
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+  const loanAmt = Number(inputLoanAmount.value);
+  if (loanAmt > 1000) {
+    currentAccount.movements.push(loanAmt);
+  } else {
+    console.log('Amount Enter should be geater than 1000');
+  }
+  calcBalanceDisplay(currentAccount);
 });
