@@ -159,4 +159,5 @@ btnLoan.addEventListener('click', function (e) {
     console.log('Amount Enter should be geater than 1000');
   }
   calcBalanceDisplay(currentAccount);
+  inputLoanAmount.value = ' ';
 });
