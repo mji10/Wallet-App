@@ -5,14 +5,14 @@
 // BANKIST APP
 
 const account1 = {
-  owner: 'Arjit Verma', //ar to join
+  owner: 'Arjit Verma', //av to join
   movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
   interestRate: 1.2, // %
   pin: 1111,
 };
 
 const account2 = {
-  owner: 'Ravi Singh', //rv
+  owner: 'Ravi Singh', //rs
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
@@ -135,29 +135,80 @@ btnLogin.addEventListener('click', function (e) {
   currentAccount = accounts.find(acc => acc.username === enteredUsername);
 
   if (currentAccount?.pin === Number(enteredPassword)) {
-    console.log('Login Success');
+    showToast('Loan Successful', 'success');
     labelWelcome.textContent = `Welcome Back , ${
       currentAccount.owner.split(' ')[0]
     }`;
-
-    displayMovements(currentAccount.movements);
-    calcBalanceDisplay(currentAccount);
-    displaySummary(currentAccount);
+    updateUI(currentAccount);
     containerApp.style.opacity = '100';
   } else {
-    console.log('Login Failure');
+    showToast('Login Error : Invalid Credentionals', 'error');
   }
 });
+
+// Create a function if update ui as these are repeated again and again
+const updateUI = function (acc) {
+  displayMovements(acc.movements);
+  calcBalanceDisplay(acc);
+  displaySummary(acc);
+};
 
 // Request Loan Amt Btn
 btnLoan.addEventListener('click', function (e) {
   e.preventDefault();
   const loanAmt = Number(inputLoanAmount.value);
-  if (loanAmt > 1000) {
+  if (loanAmt > 0 && loanAmt <= currentAccount.balance * 0.1) {
     currentAccount.movements.push(loanAmt);
+    showToast('Loan Successfully Done!', 'success');
   } else {
-    console.log('Amount Enter should be geater than 1000');
+    showToast(
+      'Loan Amount Should be Lesser than 10% of Total Amount.',
+      'error'
+    );
   }
-  calcBalanceDisplay(currentAccount);
+  updateUI(currentAccount);
   inputLoanAmount.value = ' ';
+});
+
+const showToast = function (text, type) {
+  Toastify({
+    text: text,
+    duration: 3000,
+    destination: 'https://github.com/apvarun/toastify-js',
+    newWindow: true,
+    close: true,
+    gravity: 'top', // `top` or `bottom`
+    position: 'center', // `left`, `center` or `right`
+    stopOnFocus: true, // Prevents dismissing of toast on hover
+    style: {
+      background: `${type === 'success' ? 'green' : 'red'}`,
+      color: 'white',
+    },
+    onClick: function () {}, // Callback after click
+  }).showToast();
+};
+
+// Transfer Amount to another account
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const amountValue = Number(inputTransferAmount.value);
+
+  const recivingAcc = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
+
+  if (
+    amountValue > 0 &&
+    recivingAcc &&
+    currentAccount.balance >= amountValue &&
+    recivingAcc?.username !== currentAccount.username
+  ) {
+    currentAccount.movements.push(-amountValue);
+    recivingAcc.movements.push(amountValue);
+    updateUI(currentAccount);
+    showToast('Transferred Successfully', 'success');
+  } else {
+    showToast('Transferred Error', 'error');
+  }
 });
